@@ -8,7 +8,7 @@ import { messageIngestWorker } from "./worker/message-ingest.worker.js";
 
 async function main() {
   if (env.NODE_ENV === "development") {
-    await runMigrations();
+    await runMigrations(env.DATABASE_URL);
   }
 
   const bot = createBot();
