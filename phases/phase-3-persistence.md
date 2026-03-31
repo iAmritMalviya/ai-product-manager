@@ -1,6 +1,6 @@
 # Phase 3: Persistence
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** Phase 2 (AI pipeline extracts entities)
 **Delivers:** All extracted data persisted to PostgreSQL, members auto-registered, tasks tracked
 
@@ -118,15 +118,15 @@ chrono-node
 
 ## Definition of Done
 
-- [ ] `pnpm db:generate` creates migration files
-- [ ] `pnpm db:migrate` applies migrations to PG (or auto-migrate on startup)
-- [ ] Send first message in group → team + member auto-created in DB
-- [ ] Send "Amrit will finish auth by Friday" → task row created with assignee, deadline, status=proposed
-- [ ] Send "auth is done" → task status updated to done, task_event logged
-- [ ] `SELECT * FROM tasks WHERE team_id = X` shows correct data
-- [ ] `SELECT * FROM messages` shows all processed messages with classifications
-- [ ] Duplicate message (same telegram_message_id) is ignored, not double-processed
-- [ ] Recent messages query works (used for AI context in Phase 2)
+- [x] `pnpm db:generate` creates migration files
+- [x] `pnpm db:migrate` applies migrations to PG (or auto-migrate on startup)
+- [x] Send first message in group → team + member auto-created in DB
+- [x] Send "Amrit will finish auth by Friday" → task row created with assignee, deadline, status=proposed
+- [x] Send "auth is done" → task status updated to done, task_event logged
+- [x] `SELECT * FROM tasks WHERE team_id = X` shows correct data
+- [x] `SELECT * FROM messages` shows all processed messages with classifications
+- [x] Duplicate message (same telegram_message_id) is ignored, not double-processed
+- [x] Recent messages query works (used for AI context in Phase 2)
 
 ## Notes
 

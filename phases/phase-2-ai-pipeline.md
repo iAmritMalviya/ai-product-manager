@@ -1,6 +1,6 @@
 # Phase 2: AI Pipeline
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** Phase 1 (bot captures messages)
 **Delivers:** Messages flow through BullMQ → OpenAI classifies and extracts task entities
 
@@ -95,13 +95,13 @@ openai
 
 ## Definition of Done
 
-- [ ] Send "Amrit will finish the auth module by Friday" in group
-- [ ] Worker logs classification: `task_creation` with high confidence
-- [ ] Worker logs extraction: `{ assignee: "Amrit", taskTitle: "auth module", deadline: "Friday", status: "proposed" }`
-- [ ] Send "nice weather today" → classified as `general_discussion`, extraction skipped
-- [ ] Send "the payment bug is fixed" → classified as `status_update`, extracts status: "done"
+- [x] Send "Amrit will finish the auth module by Friday" in group
+- [x] Worker logs classification: `task_creation` with high confidence
+- [x] Worker logs extraction: `{ assignee: "Amrit", taskTitle: "auth module", deadline: "Friday", status: "proposed" }`
+- [x] Send "nice weather today" → classified as `general_discussion`, extraction skipped
+- [x] Send "the payment bug is fixed" → classified as `status_update`, extracts status: "done"
 - [ ] BullMQ dashboard shows jobs completing (optional: bull-board)
-- [ ] AI errors are caught and logged, don't crash the worker
+- [x] AI errors are caught and logged, don't crash the worker
 
 ## Cost Estimate
 
