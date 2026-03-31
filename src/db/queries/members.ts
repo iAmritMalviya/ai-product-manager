@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "../client.js";
 import { members } from "../schema/index.js";
 
@@ -6,23 +6,18 @@ export async function findOrCreateMember(
   teamId: string,
   telegramUserId: number,
   displayName: string,
-  username: string | undefined
+  username: string | null | undefined
 ) {
-  const existing = await db.query.members.findFirst({
-    where: and(
-      eq(members.teamId, teamId),
-      eq(members.telegramUserId, telegramUserId)
-    ),
-  });
-
-  if (existing) return existing;
-
-  const [created] = await db
+  const [member] = await db
     .insert(members)
     .values({ teamId, telegramUserId, displayName, username: username ?? null })
+    .onConflictDoUpdate({
+      target: [members.teamId, members.telegramUserId],
+      set: { displayName, username: username ?? null },
+    })
     .returning();
 
-  return created;
+  return member;
 }
 
 export async function findMemberByName(teamId: string, name: string) {

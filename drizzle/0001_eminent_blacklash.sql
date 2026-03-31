@@ -1,0 +1,1 @@
+ALTER TABLE "members" ADD CONSTRAINT "uq_team_member" UNIQUE("team_id","telegram_user_id");

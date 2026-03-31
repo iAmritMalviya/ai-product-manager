@@ -1,6 +1,6 @@
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, ne, desc } from "drizzle-orm";
 import { db } from "../client.js";
-import { messages } from "../schema/index.js";
+import { messages, members } from "../schema/index.js";
 
 export async function saveMessage(data: {
   teamId: string;
@@ -26,10 +26,38 @@ export async function saveMessage(data: {
   return message ?? null;
 }
 
-export async function getRecentMessages(chatTeamId: string, limit = 5) {
-  return db.query.messages.findMany({
-    where: eq(messages.teamId, chatTeamId),
-    orderBy: desc(messages.createdAt),
-    limit,
-  });
+export async function updateMessageClassification(
+  messageId: string,
+  classification: "task_creation" | "status_update" | "deadline_mention" | "task_question" | "general_discussion" | "bot_command",
+  confidence: number
+) {
+  const [updated] = await db
+    .update(messages)
+    .set({ classification, classificationConfidence: confidence })
+    .where(eq(messages.id, messageId))
+    .returning();
+  return updated;
+}
+
+export async function getRecentMessagesWithSenders(
+  teamId: string,
+  limit: number,
+  excludeTelegramMessageId?: number
+) {
+  const conditions = [eq(messages.teamId, teamId)];
+  if (excludeTelegramMessageId !== undefined) {
+    conditions.push(ne(messages.telegramMessageId, excludeTelegramMessageId));
+  }
+
+  return db
+    .select({
+      text: messages.text,
+      displayName: members.displayName,
+      username: members.username,
+    })
+    .from(messages)
+    .innerJoin(members, eq(messages.memberId, members.id))
+    .where(and(...conditions))
+    .orderBy(desc(messages.createdAt))
+    .limit(limit);
 }

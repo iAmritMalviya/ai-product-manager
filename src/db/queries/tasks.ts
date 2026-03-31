@@ -9,6 +9,7 @@ export async function createTask(data: {
   status?: "proposed" | "open" | "in_progress" | "blocked" | "done" | "cancelled";
   priority?: "low" | "medium" | "high" | "urgent" | null;
   deadline?: Date | null;
+  triggeredById?: string | null;
 }) {
   const [task] = await db
     .insert(tasks)
@@ -26,6 +27,7 @@ export async function createTask(data: {
     taskId: task.id,
     type: "created",
     newValue: task.status,
+    triggeredById: data.triggeredById ?? null,
   });
 
   return task;
@@ -92,6 +94,12 @@ export async function assignTask(
   assigneeId: string,
   triggeredById?: string
 ) {
+  const existing = await db.query.tasks.findFirst({
+    where: eq(tasks.id, taskId),
+  });
+
+  if (!existing) return null;
+
   const [updated] = await db
     .update(tasks)
     .set({ assigneeId, updatedAt: new Date() })
@@ -101,6 +109,7 @@ export async function assignTask(
   await db.insert(taskEvents).values({
     taskId,
     type: "assigned",
+    oldValue: existing.assigneeId,
     newValue: assigneeId,
     triggeredById: triggeredById ?? null,
   });
@@ -147,6 +156,7 @@ export async function findTaskByKeywords(teamId: string, keywords: string[]) {
   });
 
   const normalizedKeywords = keywords.map((k) => k.toLowerCase());
+  const minScore = Math.max(1, Math.ceil(normalizedKeywords.length / 2));
 
   let bestMatch: (typeof teamTasks)[number] | null = null;
   let bestScore = 0;
@@ -163,5 +173,5 @@ export async function findTaskByKeywords(teamId: string, keywords: string[]) {
     }
   }
 
-  return bestMatch;
+  return bestScore >= minScore ? bestMatch : null;
 }

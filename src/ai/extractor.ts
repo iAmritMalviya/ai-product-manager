@@ -31,16 +31,17 @@ const systemPrompt = `You are an entity extractor for a project management bot. 
 3. For status, infer from context: "I'll do X" → proposed, "X is done" → done, "working on X" → in_progress.
 4. Set confidence based on how clearly the entities were expressed. Ambiguous messages get lower confidence.
 5. If the classification is status_update, focus on identifying which task is being updated and to what status.
-6. If the classification is deadline_mention, focus on the deadline and which task it applies to.`;
+6. If the classification is deadline_mention, focus on the deadline and which task it applies to.
+7. You will receive recent conversation history with sender attribution. Use it to resolve references ("this", "that task", "it") to specific tasks or topics. Only extract entities from the CURRENT message.`;
 
 export async function extractEntities(
   text: string,
   classification: ClassificationResult,
-  recentMessages: string[]
+  recentContext: string[]
 ): Promise<ExtractionResult> {
   const contextBlock =
-    recentMessages.length > 0
-      ? `\nRecent messages for context:\n${recentMessages.join("\n")}`
+    recentContext.length > 0
+      ? `\n\nRecent conversation (extract entities ONLY from the current message, not from context):\n---\n${recentContext.join("\n")}\n---`
       : "";
 
   const completion = await openai.chat.completions.parse({

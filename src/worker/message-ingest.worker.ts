@@ -6,7 +6,11 @@ import { classifyMessage } from "../ai/classifier.js";
 import { extractEntities } from "../ai/extractor.js";
 import { findOrCreateTeam } from "../db/queries/teams.js";
 import { findOrCreateMember, findMemberByName } from "../db/queries/members.js";
-import { saveMessage, getRecentMessages } from "../db/queries/messages.js";
+import {
+  saveMessage,
+  getRecentMessagesWithSenders,
+  updateMessageClassification,
+} from "../db/queries/messages.js";
 import {
   createTask,
   updateTaskStatus,
@@ -15,39 +19,54 @@ import {
 } from "../db/queries/tasks.js";
 import { logger } from "../lib/logger.js";
 
+function formatContextWindow(
+  rows: Array<{ text: string; displayName: string; username: string | null }>
+): string[] {
+  return rows.map((m) => {
+    const sender = m.username ? `${m.displayName} (@${m.username})` : m.displayName;
+    return `${sender}: ${m.text}`;
+  });
+}
+
 export const messageIngestWorker = new Worker<MessageIngestPayload>(
   "message.ingest",
   async (job) => {
-    const { chatId, senderId, senderName, text, messageId } = job.data;
+    const { chatId, senderId, senderName, senderUsername, text, messageId, timestamp } = job.data;
     const log = logger.child({ jobId: job.id, chatId, messageId });
 
     try {
-      // Stage 1: Classify
-      const classification = await classifyMessage(text, senderName);
-      log.info(
-        { category: classification.category, confidence: classification.confidence },
-        "Message classified"
-      );
-
-      // Stage 3a: Auto-register team + member, save message
+      // Stage 1: Register team + member (race-safe upserts)
       const team = await findOrCreateTeam(chatId, `Chat ${chatId}`);
-      const member = await findOrCreateMember(team.id, senderId, senderName, undefined);
+      const member = await findOrCreateMember(team.id, senderId, senderName, senderUsername);
+
+      // Stage 2: Save message WITHOUT classification (idempotency gate)
       const saved = await saveMessage({
         teamId: team.id,
         memberId: member.id,
         telegramMessageId: messageId,
         text,
-        classification: classification.category,
-        classificationConfidence: classification.confidence,
       });
 
-      // Idempotency: if message already exists, skip
       if (!saved) {
         log.info("Duplicate message — skipping");
-        return { classification, extraction: null, persisted: false };
+        return { classification: null, extraction: null, persisted: false };
       }
 
-      // Early exit for general discussion
+      // Stage 3: Fetch context window (50 recent messages, exclude self)
+      const recentDbMessages = await getRecentMessagesWithSenders(team.id, 50, messageId);
+      const context = formatContextWindow(recentDbMessages.reverse());
+
+      // Stage 4: Classify (with conversation context)
+      const classification = await classifyMessage(text, senderName, context);
+      log.info(
+        { category: classification.category, confidence: classification.confidence },
+        "Message classified"
+      );
+
+      // Stage 5: Persist classification on the saved message
+      await updateMessageClassification(saved.id, classification.category, classification.confidence);
+
+      // Stage 6: Early exit for general discussion
       if (
         classification.category === "general_discussion" &&
         classification.confidence > 0.8
@@ -56,13 +75,8 @@ export const messageIngestWorker = new Worker<MessageIngestPayload>(
         return { classification, extraction: null, persisted: true };
       }
 
-      // Stage 2: Extract entities (with recent messages for context)
-      const recentDbMessages = await getRecentMessages(team.id, 5);
-      const recentContext = recentDbMessages
-        .reverse()
-        .map((m) => m.text);
-
-      const extraction = await extractEntities(text, classification, recentContext);
+      // Stage 7: Extract entities (with same context)
+      const extraction = await extractEntities(text, classification, context);
       log.info(
         {
           assignee: extraction.assignee,
@@ -75,14 +89,16 @@ export const messageIngestWorker = new Worker<MessageIngestPayload>(
         "Entities extracted"
       );
 
-      // Stage 3b: Persist extracted data
+      // Stage 8: Persist extracted data
+      const referenceDate = new Date(timestamp * 1000);
+
       if (classification.category === "task_creation" && extraction.taskTitle) {
         const assignee = extraction.assignee
           ? await findMemberByName(team.id, extraction.assignee)
           : null;
 
         const deadline = extraction.deadline
-          ? chrono.parseDate(extraction.deadline) ?? null
+          ? chrono.parseDate(extraction.deadline, referenceDate) ?? null
           : null;
 
         const task = await createTask({
@@ -92,6 +108,7 @@ export const messageIngestWorker = new Worker<MessageIngestPayload>(
           status: extraction.status ?? "proposed",
           priority: extraction.priority ?? null,
           deadline,
+          triggeredById: member.id,
         });
 
         log.info({ taskId: task.id, title: task.title }, "Task created");
@@ -119,7 +136,7 @@ export const messageIngestWorker = new Worker<MessageIngestPayload>(
           team.id,
           extraction.referencedTaskKeywords
         );
-        const parsedDeadline = chrono.parseDate(extraction.deadline);
+        const parsedDeadline = chrono.parseDate(extraction.deadline, referenceDate);
 
         if (matchedTask && parsedDeadline) {
           await updateTaskDeadline(matchedTask.id, parsedDeadline, member.id);

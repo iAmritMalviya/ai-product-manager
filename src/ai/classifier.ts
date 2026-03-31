@@ -21,19 +21,26 @@ Your job is to classify each message into exactly one category based on its cont
 2. When uncertain between task_creation and general_discussion, lean toward general_discussion — false positives are worse than missed tasks.
 3. A message can only belong to ONE category. Pick the most dominant intent.
 4. Provide a short reasoning (1 sentence) explaining your classification.
-5. Set confidence between 0 and 1. Use high confidence (>0.8) only when the intent is unambiguous.`;
+5. Set confidence between 0 and 1. Use high confidence (>0.8) only when the intent is unambiguous.
+6. You may receive recent conversation history for context. Use it to understand what pronouns ("this", "that", "it") refer to and to understand the flow of conversation. Only classify the CURRENT message — the context is read-only background.`;
 
 export async function classifyMessage(
   text: string,
-  senderName: string
+  senderName: string,
+  recentContext: string[] = []
 ): Promise<ClassificationResult> {
+  const contextBlock =
+    recentContext.length > 0
+      ? `\n\nRecent conversation (do NOT classify these — only classify the current message):\n---\n${recentContext.join("\n")}\n---`
+      : "";
+
   const completion = await openai.chat.completions.parse({
     model: "gpt-4o-mini",
     messages: [
       { role: "system", content: systemPrompt },
       {
         role: "user",
-        content: `Sender: ${senderName}\nMessage: ${text}`,
+        content: `Sender: ${senderName}\nMessage: ${text}${contextBlock}`,
       },
     ],
     response_format: zodResponseFormat(classificationResultSchema, "classification"),

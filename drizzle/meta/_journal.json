@@ -8,6 +8,13 @@
       "when": 1774937464408,
       "tag": "0000_fine_black_panther",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774940539556,
+      "tag": "0001_eminent_blacklash",
+      "breakpoints": true
     }
   ]
 }

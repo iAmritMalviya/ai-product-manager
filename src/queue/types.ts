@@ -2,6 +2,7 @@ export interface MessageIngestPayload {
   chatId: number;
   senderId: number;
   senderName: string;
+  senderUsername: string | null;
   text: string;
   messageId: number;
   timestamp: number;
