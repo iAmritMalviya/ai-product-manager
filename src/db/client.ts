@@ -4,6 +4,5 @@ import { env } from "../env.js";
 import * as schema from "./schema/index.js";
 
 const client = postgres(env.DATABASE_URL);
-
 export const db = drizzle(client, { schema });
 export { client };
