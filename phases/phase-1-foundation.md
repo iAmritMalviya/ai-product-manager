@@ -1,6 +1,6 @@
 # Phase 1: Foundation
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** Nothing
 **Delivers:** Bot connects to Telegram, captures group messages, health check responds
 
@@ -75,12 +75,12 @@ volumes:
 
 ## Definition of Done
 
-- [ ] `docker compose up` starts PG + Redis without errors
-- [ ] `pnpm dev` starts the bot, logs "Bot started" with bot username
-- [ ] Send `/ping` in a Telegram group → bot replies "pong"
-- [ ] Send any text message in group → logged to console with sender name, chat ID, message text
-- [ ] `curl localhost:3000/health` returns `{"status":"ok"}`
-- [ ] TypeScript compiles with zero errors (`pnpm typecheck`)
+- [x] `docker compose up` starts PG + Redis without errors
+- [x] `pnpm dev` starts the bot, logs "Bot started" with bot username
+- [x] Send `/ping` in a Telegram group → bot replies "pong"
+- [x] Send any text message in group → logged to console with sender name, chat ID, message text
+- [x] `curl localhost:3000/health` returns `{"status":"ok"}`
+- [x] TypeScript compiles with zero errors (`pnpm typecheck`)
 
 ## Notes
 
