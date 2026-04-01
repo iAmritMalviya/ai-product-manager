@@ -28,3 +28,19 @@ export const extractionResultSchema = z.object({
 });
 
 export type ExtractionResult = z.infer<typeof extractionResultSchema>;
+
+export const responseDecisionSchema = z.object({
+  shouldRespond: z.boolean(),
+  responseType: z.enum([
+    "confirm_task",
+    "ack_status",
+    "clarify_assignee",
+    "clarify_deadline",
+    "clarify_ambiguous",
+    "silent",
+  ]),
+  message: z.string().nullable(),
+  confidence: z.number().min(0).max(1),
+});
+
+export type ResponseDecision = z.infer<typeof responseDecisionSchema>;

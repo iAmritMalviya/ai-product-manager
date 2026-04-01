@@ -1,6 +1,13 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "../client.js";
 import { members } from "../schema/index.js";
+
+export async function getMembersByIds(memberIds: string[]) {
+  if (memberIds.length === 0) return [];
+  return db.query.members.findMany({
+    where: inArray(members.id, memberIds),
+  });
+}
 
 export async function findOrCreateMember(
   teamId: string,

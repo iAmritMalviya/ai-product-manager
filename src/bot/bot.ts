@@ -1,6 +1,7 @@
 import { Bot } from "grammy";
 import { env } from "../env.js";
 import { pingCommand } from "./commands/ping.js";
+import { tasksCommand, myTasksCommand, statusCommand, helpCommand } from "./commands/tasks.js";
 import { groupMessageMiddleware } from "./middleware/group-message.js";
 
 export function createBot() {
@@ -8,6 +9,10 @@ export function createBot() {
 
   bot.use(groupMessageMiddleware);
   bot.command("ping", pingCommand);
+  bot.command("tasks", tasksCommand);
+  bot.command("mytasks", myTasksCommand);
+  bot.command("status", statusCommand);
+  bot.command("help", helpCommand);
 
   return bot;
 }

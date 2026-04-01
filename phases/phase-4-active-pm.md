@@ -1,6 +1,6 @@
 # Phase 4: Active PM
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** Phase 3 (tasks persisted to DB)
 **Delivers:** Bot responds in chat — confirms tasks, asks clarifications, supports slash commands
 
@@ -110,17 +110,17 @@ Stage 4: decideResponse(extraction, recentMessages)
 
 ## Definition of Done
 
-- [ ] Send "Amrit will finish auth by Friday" → bot replies with task confirmation
-- [ ] Send "auth is done" → bot replies with status acknowledgment
-- [ ] Send "we need to refactor payments" (no assignee) → bot asks who's handling it
-- [ ] Send "nice weather" → bot stays silent
-- [ ] `/tasks` → lists all active tasks formatted nicely
-- [ ] `/mytasks` → shows only sender's tasks
-- [ ] `/status auth` → shows auth module task details
-- [ ] `/help` → lists all commands
-- [ ] Bot doesn't spam — stays silent on casual chat
-- [ ] Responses are formatted cleanly in Telegram (HTML)
-- [ ] Rate limiting prevents Telegram API throttling
+- [x] Send "Amrit will finish auth by Friday" → bot replies with task confirmation
+- [x] Send "auth is done" → bot replies with status acknowledgment
+- [x] Send "we need to refactor payments" (no assignee) → bot asks who's handling it
+- [x] Send "nice weather" → bot stays silent
+- [x] `/tasks` → lists all active tasks formatted nicely
+- [x] `/mytasks` → shows only sender's tasks
+- [x] `/status auth` → shows auth module task details
+- [x] `/help` → lists all commands
+- [x] Bot doesn't spam — stays silent on casual chat
+- [x] Responses are formatted cleanly in Telegram (HTML)
+- [x] Rate limiting prevents Telegram API throttling
 
 ## Notes
 

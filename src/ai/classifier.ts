@@ -1,5 +1,4 @@
-import { zodResponseFormat } from "openai/helpers/zod.mjs";
-import { openai } from "./client.js";
+import { getAIProvider } from "./providers/index.js";
 import { classificationResultSchema, type ClassificationResult } from "./schemas.js";
 
 const systemPrompt = `You are a message classifier for a project management bot in a Telegram group chat.
@@ -34,8 +33,9 @@ export async function classifyMessage(
       ? `\n\nRecent conversation (do NOT classify these — only classify the current message):\n---\n${recentContext.join("\n")}\n---`
       : "";
 
-  const completion = await openai.chat.completions.parse({
-    model: "gpt-4o-mini",
+  const provider = await getAIProvider();
+
+  return provider.chatWithStructuredOutput({
     messages: [
       { role: "system", content: systemPrompt },
       {
@@ -43,13 +43,7 @@ export async function classifyMessage(
         content: `Sender: ${senderName}\nMessage: ${text}${contextBlock}`,
       },
     ],
-    response_format: zodResponseFormat(classificationResultSchema, "classification"),
+    schema: classificationResultSchema,
+    schemaName: "classification",
   });
-
-  const parsed = completion.choices[0].message.parsed;
-  if (!parsed) {
-    throw new Error("Failed to parse classification response");
-  }
-
-  return parsed;
 }

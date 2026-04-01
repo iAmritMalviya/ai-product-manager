@@ -1,5 +1,12 @@
+import { eq } from "drizzle-orm";
 import { db } from "../client.js";
 import { teams } from "../schema/index.js";
+
+export async function findTeamByChatId(chatId: number) {
+  return db.query.teams.findFirst({
+    where: eq(teams.telegramChatId, chatId),
+  });
+}
 
 export async function findOrCreateTeam(chatId: number, name: string) {
   const [team] = await db

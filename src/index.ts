@@ -5,6 +5,7 @@ import { app } from "./http/server.js";
 import { logger } from "./lib/logger.js";
 import { runMigrations } from "./db/migrate.js";
 import { messageIngestWorker } from "./worker/message-ingest.worker.js";
+import { botRespondWorker } from "./worker/bot-respond.worker.js";
 
 async function main() {
   if (env.NODE_ENV === "development") {
@@ -22,6 +23,11 @@ async function main() {
   logger.info(
     { workerName: messageIngestWorker.name },
     "Message ingest worker started"
+  );
+
+  logger.info(
+    { workerName: botRespondWorker.name },
+    "Bot respond worker started"
   );
 
   serve({ fetch: app.fetch, port: env.PORT }, (info) => {

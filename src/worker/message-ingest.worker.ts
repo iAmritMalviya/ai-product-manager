@@ -17,6 +17,8 @@ import {
   updateTaskDeadline,
   findTaskByKeywords,
 } from "../db/queries/tasks.js";
+import { decideResponse } from "../ai/responder.js";
+import { botRespondQueue } from "../queue/queues.js";
 import { logger } from "../lib/logger.js";
 
 function formatContextWindow(
@@ -72,6 +74,12 @@ export const messageIngestWorker = new Worker<MessageIngestPayload>(
         classification.confidence > 0.8
       ) {
         log.info("Skipping extraction — general discussion");
+        return { classification, extraction: null, persisted: true };
+      }
+
+      // Stage 6b: Early exit for bot commands (handled by grammY directly)
+      if (classification.category === "bot_command") {
+        log.info("Skipping extraction — bot command");
         return { classification, extraction: null, persisted: true };
       }
 
@@ -149,7 +157,24 @@ export const messageIngestWorker = new Worker<MessageIngestPayload>(
         }
       }
 
-      return { classification, extraction, persisted: true };
+      // Stage 9: Decide response and enqueue if needed
+      const decision = await decideResponse(text, senderName, classification, extraction, context);
+      log.info(
+        { shouldRespond: decision.shouldRespond, responseType: decision.responseType, confidence: decision.confidence },
+        "Response decision"
+      );
+
+      if (decision.shouldRespond && decision.message && decision.confidence > 0.7) {
+        await botRespondQueue.add("respond", {
+          chatId,
+          text: decision.message,
+          replyToMessageId: messageId,
+          parseMode: "HTML",
+        });
+        log.info({ responseType: decision.responseType }, "Response enqueued");
+      }
+
+      return { classification, extraction, decision, persisted: true };
     } catch (err) {
       log.error(err, "Failed to process message");
       throw err;

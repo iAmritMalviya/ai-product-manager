@@ -1,5 +1,4 @@
-import { zodResponseFormat } from "openai/helpers/zod.mjs";
-import { openai } from "./client.js";
+import { getAIProvider } from "./providers/index.js";
 import {
   extractionResultSchema,
   type ExtractionResult,
@@ -44,8 +43,9 @@ export async function extractEntities(
       ? `\n\nRecent conversation (extract entities ONLY from the current message, not from context):\n---\n${recentContext.join("\n")}\n---`
       : "";
 
-  const completion = await openai.chat.completions.parse({
-    model: "gpt-4o-mini",
+  const provider = await getAIProvider();
+
+  return provider.chatWithStructuredOutput({
     messages: [
       { role: "system", content: systemPrompt },
       {
@@ -53,13 +53,7 @@ export async function extractEntities(
         content: `Classification: ${classification.category} (confidence: ${classification.confidence})\nMessage: ${text}${contextBlock}`,
       },
     ],
-    response_format: zodResponseFormat(extractionResultSchema, "extraction"),
+    schema: extractionResultSchema,
+    schemaName: "extraction",
   });
-
-  const parsed = completion.choices[0].message.parsed;
-  if (!parsed) {
-    throw new Error("Failed to parse extraction response");
-  }
-
-  return parsed;
 }
