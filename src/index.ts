@@ -4,8 +4,14 @@ import { env } from "./env.js";
 import { app } from "./http/server.js";
 import { logger } from "./lib/logger.js";
 import { runMigrations } from "./db/migrate.js";
+import { client } from "./db/client.js";
+import { redisConnection } from "./queue/connection.js";
+import { messageIngestQueue, botRespondQueue, scheduledJobsQueue } from "./queue/queues.js";
 import { messageIngestWorker } from "./worker/message-ingest.worker.js";
 import { botRespondWorker } from "./worker/bot-respond.worker.js";
+import { scheduledWorker } from "./worker/scheduled.worker.js";
+import { registerScheduledJobs } from "./scheduler/register.js";
+import { setupGracefulShutdown } from "./lib/shutdown.js";
 
 async function main() {
   if (env.NODE_ENV === "development") {
@@ -30,8 +36,24 @@ async function main() {
     "Bot respond worker started"
   );
 
-  serve({ fetch: app.fetch, port: env.PORT }, (info) => {
+  logger.info(
+    { workerName: scheduledWorker.name },
+    "Scheduled worker started"
+  );
+
+  await registerScheduledJobs();
+
+  const httpServer = serve({ fetch: app.fetch, port: env.PORT }, (info) => {
     logger.info({ port: info.port }, "HTTP server started");
+  });
+
+  setupGracefulShutdown({
+    bot,
+    httpServer,
+    workers: [messageIngestWorker, botRespondWorker, scheduledWorker],
+    queues: [messageIngestQueue, botRespondQueue, scheduledJobsQueue],
+    dbClient: client,
+    redisConnection,
   });
 }
 

@@ -64,6 +64,84 @@ export function formatSingleTask(task: TaskForDisplay): string {
   ].join("\n");
 }
 
+export function formatOverdueNudge(tasks: TaskForDisplay[]): string {
+  if (tasks.length === 0) return "";
+
+  const header = "<b>Overdue Tasks</b>\n";
+  const lines = tasks.map((t) => {
+    const title = escapeHtml(t.title);
+    const assignee = t.assigneeName ? escapeHtml(t.assigneeName) : "Unassigned";
+    const deadline = t.deadline ? formatDeadline(t.deadline) : "";
+    const ago = t.deadline
+      ? `(${Math.ceil((Date.now() - t.deadline.getTime()) / (1000 * 60 * 60 * 24))} days ago)`
+      : "";
+
+    return `· <b>${title}</b> — ${assignee} — was due ${deadline} ${ago}`;
+  });
+
+  return header + "\n" + lines.join("\n") + "\n\nPlease update status or adjust deadlines.";
+}
+
+export function formatStandupFallback(tasks: TaskForDisplay[], teamName: string): string {
+  if (tasks.length === 0) return "";
+
+  const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+  const header = `<b>Daily Standup — ${escapeHtml(teamName)} — ${today}</b>\n`;
+
+  const inProgress = tasks.filter((t) => t.status === "in_progress");
+  const blocked = tasks.filter((t) => t.status === "blocked");
+  const open = tasks.filter((t) => t.status === "open" || t.status === "proposed");
+
+  const sections: string[] = [];
+
+  if (inProgress.length > 0) {
+    sections.push(`<b>In Progress (${inProgress.length}):</b>`);
+    inProgress.forEach((t) => {
+      const assignee = t.assigneeName ? escapeHtml(t.assigneeName) : "Unassigned";
+      const deadline = t.deadline ? ` — due ${formatDeadline(t.deadline)}` : "";
+      sections.push(`· ${escapeHtml(t.title)} — ${assignee}${deadline}`);
+    });
+  }
+
+  if (blocked.length > 0) {
+    sections.push(`\n<b>Blocked (${blocked.length}):</b>`);
+    blocked.forEach((t) => {
+      const assignee = t.assigneeName ? escapeHtml(t.assigneeName) : "Unassigned";
+      sections.push(`· ${escapeHtml(t.title)} — ${assignee}`);
+    });
+  }
+
+  if (open.length > 0) {
+    sections.push(`\n<b>Open (${open.length}):</b>`);
+    open.forEach((t) => {
+      const assignee = t.assigneeName ? escapeHtml(t.assigneeName) : "Unassigned";
+      sections.push(`· ${escapeHtml(t.title)} — ${assignee}`);
+    });
+  }
+
+  return header + "\n" + sections.join("\n") + "\n\nHave a productive day!";
+}
+
+export function formatWeeklyFallback(data: {
+  completed: number;
+  created: number;
+  open: number;
+  overdue: number;
+}): string {
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const range = `${weekAgo.toLocaleDateString("en-US", { month: "short", day: "numeric" })} — ${now.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+
+  return [
+    `<b>Weekly Report — ${range}</b>`,
+    "",
+    `<b>Completed:</b> ${data.completed} tasks`,
+    `<b>New Tasks:</b> ${data.created}`,
+    `<b>Still Open:</b> ${data.open}`,
+    `<b>Overdue:</b> ${data.overdue}`,
+  ].join("\n");
+}
+
 export function formatHelp(): string {
   return [
     "<b>SuperCFO Bot Commands</b>",

@@ -1,6 +1,6 @@
 # Phase 5: Scheduled Features
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** Phase 4 (bot can respond, tasks in DB)
 **Delivers:** Daily standups, overdue nudges, weekly reports — all automated
 

@@ -5,6 +5,7 @@ import {
   type ClassificationResult,
   type ExtractionResult,
 } from "./schemas.js";
+import { AIError } from "../lib/errors.js";
 
 const systemPrompt = `You are a response decision engine for a project management bot in a Telegram group chat.
 
@@ -46,20 +47,24 @@ export async function decideResponse(
       ? `\n\nRecent conversation:\n---\n${recentContext.join("\n")}\n---`
       : "";
 
-  const provider = await getAIProvider();
+  try {
+    const provider = await getAIProvider();
 
-  return provider.chatWithStructuredOutput({
-    messages: [
-      { role: "system", content: systemPrompt },
-      {
-        role: "user",
-        content: `Classification: ${classification.category} (confidence: ${classification.confidence})
+    return await provider.chatWithStructuredOutput({
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: `Classification: ${classification.category} (confidence: ${classification.confidence})
 Extraction: assignee=${extraction.assignee}, title=${extraction.taskTitle}, deadline=${extraction.deadline}, status=${extraction.status}, priority=${extraction.priority}
 Sender: ${senderName}
 Message: ${text}${contextBlock}`,
-      },
-    ],
-    schema: responseDecisionSchema,
-    schemaName: "response_decision",
-  });
+        },
+      ],
+      schema: responseDecisionSchema,
+      schemaName: "response_decision",
+    });
+  } catch (err) {
+    throw new AIError("Failed to decide response", err);
+  }
 }

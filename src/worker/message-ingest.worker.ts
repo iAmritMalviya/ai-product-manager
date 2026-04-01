@@ -19,6 +19,7 @@ import {
 } from "../db/queries/tasks.js";
 import { decideResponse } from "../ai/responder.js";
 import { botRespondQueue } from "../queue/queues.js";
+import { registerTeamJobs } from "../scheduler/register.js";
 import { logger } from "../lib/logger.js";
 
 function formatContextWindow(
@@ -35,11 +36,15 @@ export const messageIngestWorker = new Worker<MessageIngestPayload>(
   async (job) => {
     const { chatId, senderId, senderName, senderUsername, text, messageId, timestamp } = job.data;
     const log = logger.child({ jobId: job.id, chatId, messageId });
+    const startTime = Date.now();
 
     try {
       // Stage 1: Register team + member (race-safe upserts)
       const team = await findOrCreateTeam(chatId, `Chat ${chatId}`);
       const member = await findOrCreateMember(team.id, senderId, senderName, senderUsername);
+
+      // Register scheduled jobs for this team (idempotent — upsertJobScheduler handles duplicates)
+      await registerTeamJobs(team);
 
       // Stage 2: Save message WITHOUT classification (idempotency gate)
       const saved = await saveMessage({
@@ -174,6 +179,7 @@ export const messageIngestWorker = new Worker<MessageIngestPayload>(
         log.info({ responseType: decision.responseType }, "Response enqueued");
       }
 
+      log.info({ durationMs: Date.now() - startTime }, "Message processed");
       return { classification, extraction, decision, persisted: true };
     } catch (err) {
       log.error(err, "Failed to process message");

@@ -12,13 +12,14 @@ export const botRespondWorker = new Worker<BotRespondPayload>(
   async (job) => {
     const { chatId, text, replyToMessageId, parseMode } = job.data;
     const log = logger.child({ jobId: job.id, chatId });
+    const startTime = Date.now();
 
     try {
       await api.sendMessage(chatId, text, {
         reply_to_message_id: replyToMessageId,
         parse_mode: parseMode ?? "HTML",
       });
-      log.info("Response sent");
+      log.info({ durationMs: Date.now() - startTime }, "Response sent");
     } catch (err) {
       log.error(err, "Failed to send response");
       throw err;

@@ -8,6 +8,10 @@ export async function findTeamByChatId(chatId: number) {
   });
 }
 
+export async function getAllTeams() {
+  return db.query.teams.findMany();
+}
+
 export async function findOrCreateTeam(chatId: number, name: string) {
   const [team] = await db
     .insert(teams)

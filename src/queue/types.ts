@@ -14,3 +14,11 @@ export interface BotRespondPayload {
   replyToMessageId?: number;
   parseMode?: "HTML" | "MarkdownV2";
 }
+
+export interface ScheduledJobPayload {
+  teamId: string;
+  teamName: string;
+  chatId: number;
+  timezone: string;
+  jobType: "daily_standup" | "overdue_nudge" | "weekly_report";
+}

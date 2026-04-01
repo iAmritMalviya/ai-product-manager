@@ -44,3 +44,15 @@ export const responseDecisionSchema = z.object({
 });
 
 export type ResponseDecision = z.infer<typeof responseDecisionSchema>;
+
+export const standupSummarySchema = z.object({
+  summary: z.string(),
+});
+
+export type StandupSummary = z.infer<typeof standupSummarySchema>;
+
+export const weeklyReportSchema = z.object({
+  summary: z.string(),
+});
+
+export type WeeklyReport = z.infer<typeof weeklyReportSchema>;

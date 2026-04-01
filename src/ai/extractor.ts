@@ -4,6 +4,7 @@ import {
   type ExtractionResult,
   type ClassificationResult,
 } from "./schemas.js";
+import { AIError } from "../lib/errors.js";
 
 const systemPrompt = `You are an entity extractor for a project management bot. Given a classified message from a Telegram group chat, extract structured task-related entities.
 
@@ -43,17 +44,21 @@ export async function extractEntities(
       ? `\n\nRecent conversation (extract entities ONLY from the current message, not from context):\n---\n${recentContext.join("\n")}\n---`
       : "";
 
-  const provider = await getAIProvider();
+  try {
+    const provider = await getAIProvider();
 
-  return provider.chatWithStructuredOutput({
-    messages: [
-      { role: "system", content: systemPrompt },
-      {
-        role: "user",
-        content: `Classification: ${classification.category} (confidence: ${classification.confidence})\nMessage: ${text}${contextBlock}`,
-      },
-    ],
-    schema: extractionResultSchema,
-    schemaName: "extraction",
-  });
+    return await provider.chatWithStructuredOutput({
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: `Classification: ${classification.category} (confidence: ${classification.confidence})\nMessage: ${text}${contextBlock}`,
+        },
+      ],
+      schema: extractionResultSchema,
+      schemaName: "extraction",
+    });
+  } catch (err) {
+    throw new AIError("Failed to extract entities", err);
+  }
 }

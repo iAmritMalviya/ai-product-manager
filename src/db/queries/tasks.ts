@@ -1,4 +1,4 @@
-import { and, eq, lt, not, inArray } from "drizzle-orm";
+import { and, eq, lt, gte, not, inArray } from "drizzle-orm";
 import { db } from "../client.js";
 import { tasks, taskEvents } from "../schema/index.js";
 
@@ -141,6 +141,48 @@ export async function getOverdueTasks(teamId: string) {
       eq(tasks.teamId, teamId),
       not(inArray(tasks.status, ["done", "cancelled"])),
       lt(tasks.deadline, new Date())
+    ),
+  });
+}
+
+export async function getTasksDueToday(teamId: string) {
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+
+  return db.query.tasks.findMany({
+    where: and(
+      eq(tasks.teamId, teamId),
+      not(inArray(tasks.status, ["done", "cancelled"])),
+      gte(tasks.deadline, startOfDay),
+      lt(tasks.deadline, endOfDay)
+    ),
+  });
+}
+
+export async function getTasksCompletedThisWeek(teamId: string) {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((dayOfWeek + 6) % 7));
+
+  return db.query.tasks.findMany({
+    where: and(
+      eq(tasks.teamId, teamId),
+      eq(tasks.status, "done"),
+      gte(tasks.updatedAt, startOfWeek)
+    ),
+  });
+}
+
+export async function getTasksCreatedThisWeek(teamId: string) {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((dayOfWeek + 6) % 7));
+
+  return db.query.tasks.findMany({
+    where: and(
+      eq(tasks.teamId, teamId),
+      gte(tasks.createdAt, startOfWeek)
     ),
   });
 }

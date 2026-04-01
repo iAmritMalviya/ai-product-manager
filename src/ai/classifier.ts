@@ -1,5 +1,6 @@
 import { getAIProvider } from "./providers/index.js";
 import { classificationResultSchema, type ClassificationResult } from "./schemas.js";
+import { AIError } from "../lib/errors.js";
 
 const systemPrompt = `You are a message classifier for a project management bot in a Telegram group chat.
 
@@ -33,17 +34,21 @@ export async function classifyMessage(
       ? `\n\nRecent conversation (do NOT classify these — only classify the current message):\n---\n${recentContext.join("\n")}\n---`
       : "";
 
-  const provider = await getAIProvider();
+  try {
+    const provider = await getAIProvider();
 
-  return provider.chatWithStructuredOutput({
-    messages: [
-      { role: "system", content: systemPrompt },
-      {
-        role: "user",
-        content: `Sender: ${senderName}\nMessage: ${text}${contextBlock}`,
-      },
-    ],
-    schema: classificationResultSchema,
-    schemaName: "classification",
-  });
+    return await provider.chatWithStructuredOutput({
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: `Sender: ${senderName}\nMessage: ${text}${contextBlock}`,
+        },
+      ],
+      schema: classificationResultSchema,
+      schemaName: "classification",
+    });
+  } catch (err) {
+    throw new AIError("Failed to classify message", err);
+  }
 }
