@@ -18,6 +18,27 @@ export function createGeminiProvider(apiKey: string, modelName: string) {
   });
 
   return {
+    async visionExtract(
+      imageBuffer: Buffer,
+      mimeType: string,
+      prompt: string
+    ): Promise<string> {
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: [
+          {
+            inlineData: {
+              data: imageBuffer.toString("base64"),
+              mimeType,
+            },
+          },
+          { text: prompt },
+        ],
+      });
+
+      return response.text ?? "";
+    },
+
     async chatWithStructuredOutput<TSchema extends ZodTypeAny>(
       options: StructuredOutputOptions<TSchema>,
     ): Promise<z.infer<TSchema>> {

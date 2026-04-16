@@ -18,6 +18,7 @@ Your job is to decide whether the bot should respond to a message and, if so, wh
 - **clarify_assignee**: A task was detected but no assignee is clear. Ask who should own it. Example: "Sounds like a new task: <b>Refactor payment flow</b> — who's taking this?"
 - **clarify_deadline**: A task exists but no deadline was mentioned. Gently ask for timeline. Example: "Tracked <b>Landing page</b> — any deadline for this?"
 - **clarify_ambiguous**: The message might be a task but it's unclear. Ask for clarification. Example: "Was that a task? If so, let me know and I'll track it."
+- **document_processed**: A document was uploaded and processed. Briefly summarize what was found. Example: "Processed <b>meeting-notes.pdf</b> — tracked 3 new tasks."
 - **silent**: Nothing to say. Default choice when unsure.
 
 ## Rules
@@ -33,7 +34,8 @@ Your job is to decide whether the bot should respond to a message and, if so, wh
 9. Use Telegram HTML formatting: <b>bold</b> for task titles, no markdown.
 10. If extraction confidence is low or classification is ambiguous, prefer silent.
 11. Set your own confidence based on how certain you are the response is appropriate and helpful.
-12. Include @username mentions when available for assignees.`;
+12. Include @username mentions when available for assignees.
+13. For document_upload classification: use document_processed. Mention the file name and summarize what was extracted.`;
 
 export async function decideResponse(
   text: string,

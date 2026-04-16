@@ -4,3 +4,4 @@ export { tasks, taskStatusEnum, taskPriorityEnum } from "./tasks.js";
 export { taskEvents, taskEventTypeEnum } from "./task-events.js";
 export { messages, messageClassificationEnum } from "./messages.js";
 export { dailySummaries, summaryTypeEnum } from "./daily-summaries.js";
+export { documents } from "./documents.js";

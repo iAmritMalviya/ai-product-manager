@@ -7,7 +7,7 @@ export async function saveMessage(data: {
   memberId: string;
   telegramMessageId: number;
   text: string;
-  classification?: "task_creation" | "status_update" | "deadline_mention" | "task_question" | "general_discussion" | "bot_command" | null;
+  classification?: "task_creation" | "status_update" | "deadline_mention" | "task_question" | "general_discussion" | "bot_command" | "document_upload" | null;
   classificationConfidence?: number | null;
 }) {
   const [message] = await db
@@ -28,7 +28,7 @@ export async function saveMessage(data: {
 
 export async function updateMessageClassification(
   messageId: string,
-  classification: "task_creation" | "status_update" | "deadline_mention" | "task_question" | "general_discussion" | "bot_command",
+  classification: "task_creation" | "status_update" | "deadline_mention" | "task_question" | "general_discussion" | "bot_command" | "document_upload",
   confidence: number
 ) {
   const [updated] = await db

@@ -2,7 +2,6 @@ import { config } from "dotenv";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
-import { logger } from "../lib/logger.js";
 
 config();
 
@@ -16,18 +15,17 @@ export async function runMigrations(url?: string) {
   const client = postgres(connectionUrl, { max: 1 });
   const db = drizzle(client);
 
-  logger.info("Running database migrations...");
+  console.log("Running database migrations...");
   await migrate(db, { migrationsFolder: "drizzle" });
-  logger.info("Migrations complete");
+  console.log("Migrations complete");
 
   await client.end();
 }
 
-// Run directly when executed as a script
 const isDirectRun = process.argv[1]?.includes("migrate");
 if (isDirectRun) {
   runMigrations().catch((err) => {
-    logger.error(err, "Migration failed");
+    console.error("Migration failed:", err);
     process.exit(1);
   });
 }

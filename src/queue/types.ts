@@ -15,6 +15,21 @@ export interface BotRespondPayload {
   parseMode?: "HTML" | "MarkdownV2";
 }
 
+export interface DocumentIngestPayload {
+  chatId: number;
+  senderId: number;
+  senderName: string;
+  senderUsername: string | null;
+  messageId: number;
+  timestamp: number;
+  caption: string | null;
+  fileId: string;
+  fileName: string | null;
+  mimeType: string | null;
+  fileSize: number;
+  filePath: string;
+}
+
 export interface ScheduledJobPayload {
   teamId: string;
   teamName: string;

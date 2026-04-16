@@ -14,5 +14,11 @@ export interface StructuredOutputOptions<T extends z.ZodType> {
 export interface AIProvider {
   chatWithStructuredOutput<T extends z.ZodType>
   (options: StructuredOutputOptions<T>): Promise<z.infer<T>>;
+
+  visionExtract(
+    imageBuffer: Buffer,
+    mimeType: string,
+    prompt: string
+  ): Promise<string>;
 }
 

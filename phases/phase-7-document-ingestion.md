@@ -1,6 +1,6 @@
 # Phase 7: Document Ingestion
 
-**Status:** Not Started
+**Status:** Complete
 **Depends on:** Phase 4 (pipeline + bot responses working)
 **Delivers:** Bot processes uploaded documents (PDFs, images, spreadsheets, Word docs) — extracts text, feeds into the classify → extract → persist pipeline
 

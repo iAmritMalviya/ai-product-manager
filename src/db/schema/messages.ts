@@ -9,6 +9,7 @@ export const messageClassificationEnum = pgEnum("message_classification", [
   "task_question",
   "general_discussion",
   "bot_command",
+  "document_upload",
 ]);
 
 export const messages = pgTable(

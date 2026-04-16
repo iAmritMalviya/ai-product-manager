@@ -22,6 +22,13 @@
       "when": 1775029863962,
       "tag": "0002_calm_screwball",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1775102705847,
+      "tag": "0003_aspiring_calypso",
+      "breakpoints": true
     }
   ]
 }

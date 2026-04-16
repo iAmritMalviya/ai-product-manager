@@ -6,10 +6,11 @@ import { logger } from "./lib/logger.js";
 import { runMigrations } from "./db/migrate.js";
 import { client } from "./db/client.js";
 import { redisConnection } from "./queue/connection.js";
-import { messageIngestQueue, botRespondQueue, scheduledJobsQueue } from "./queue/queues.js";
+import { messageIngestQueue, botRespondQueue, scheduledJobsQueue, documentIngestQueue } from "./queue/queues.js";
 import { messageIngestWorker } from "./worker/message-ingest.worker.js";
 import { botRespondWorker } from "./worker/bot-respond.worker.js";
 import { scheduledWorker } from "./worker/scheduled.worker.js";
+import { documentIngestWorker } from "./worker/document-ingest.worker.js";
 import { registerScheduledJobs } from "./scheduler/register.js";
 import { setupGracefulShutdown } from "./lib/shutdown.js";
 
@@ -41,6 +42,11 @@ async function main() {
     "Scheduled worker started"
   );
 
+  logger.info(
+    { workerName: documentIngestWorker.name },
+    "Document ingest worker started"
+  );
+
   await registerScheduledJobs();
 
   const httpServer = serve({ fetch: app.fetch, port: env.PORT }, (info) => {
@@ -50,8 +56,8 @@ async function main() {
   setupGracefulShutdown({
     bot,
     httpServer,
-    workers: [messageIngestWorker, botRespondWorker, scheduledWorker],
-    queues: [messageIngestQueue, botRespondQueue, scheduledJobsQueue],
+    workers: [messageIngestWorker, botRespondWorker, scheduledWorker, documentIngestWorker],
+    queues: [messageIngestQueue, botRespondQueue, scheduledJobsQueue, documentIngestQueue],
     dbClient: client,
     redisConnection,
   });
